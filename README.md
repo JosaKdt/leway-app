@@ -1,16 +1,34 @@
-# leway_app
+### 4. Endpoints attendus par Flutter
 
-A new Flutter project.
+| Écran Flutter | Endpoint backend | Méthode |
+|---------------|-----------------|---------|
+| Login | `/auth/login` | POST |
+| Inscription | `/auth/register` | POST |
+| Vérif OTP | `/auth/verify-otp` | POST |
+| Questionnaire | `/questionnaire/items` | GET |
+| Soumettre réponses | `/questionnaire/submit` | POST |
+| Rapport RIASEC | `/recommandations/{id}` | GET |
+| Liste filières | `/filieres` | GET |
+| Détail filière | `/filieres/{id}` | GET |
+| Profil bachelier | `/bachelier/{id}` | GET |
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 🚀 Installation & lancement
 
-A few resources to get you started if this is your first Flutter project:
+### Prérequis
+- Flutter 3.19.6+
+- Android Studio + SDK Android 35
+- Git
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Cloner et lancer
+```bash
+git clone https://github.com/JosaKdt/leway-app.git
+cd leway-app
+flutter pub get
+flutter run
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+---
+
+## 🌿 Convention Git
