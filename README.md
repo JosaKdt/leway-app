@@ -13,7 +13,7 @@ Ce dépôt contient la couche mobile Flutter (interface Android), développée p
 👥 Équipe & responsabilités
 Rôle	Responsable	Périmètre
 Frontend Flutter	Marie (JosaKdt)	Tous les écrans, navigation, UI
-Backend + Intégration	Chéri (Folawè)	FastAPI, PostgreSQL, LLM, endpoints API
+Backend + Intégration	Mon Chéri (Folawè)	FastAPI, PostgreSQL, LLM, endpoints API
 ---
 🏗️ Architecture globale
 ```
