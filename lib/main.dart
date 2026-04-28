@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'screens/splash/splash_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
+import 'screens/auth/login_screen.dart';
+import 'package:flutter/material.dart';
 
 void main() {
   runApp(const LeWayApp());
@@ -23,6 +25,13 @@ class LeWayApp extends StatelessWidget {
       routes: {
         '/': (context) => const SplashScreen(),
         '/onboarding': (context) => const OnboardingScreen(),
+        '/login': (context) => const LoginScreen(),
+        '/register': (context) => const Scaffold(
+        body: Center(child: Text('Register — bientôt')),
+      ),
+        '/home': (context) => const Scaffold(
+        body: Center(child: Text('Home — bientôt')),
+      ),
       },
       onGenerateRoute: (settings) {
         return MaterialPageRoute(
