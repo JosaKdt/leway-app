@@ -118,11 +118,11 @@ class _SplashScreenState extends State<SplashScreen>
                 position: _slideAnimation,
                 child: FadeTransition(
                   opacity: _fadeAnimation,
-                  child: const Text(
+                  child: Text(
                     'Ton avenir commence ici',
                     style: TextStyle(
                       fontSize: 16,
-                      color: LeWayColors.textLight,
+                      color: Colors.white.withOpacity(0.7),
                       letterSpacing: 1,
                     ),
                   ),
@@ -147,7 +147,7 @@ class _SplashScreenState extends State<SplashScreen>
                       'Chargement...',
                       style: TextStyle(
                         fontSize: 12,
-                        color: LeWayColors.white.withOpacity(0.6),
+                        color: Colors.white.withOpacity(0.6),
                       ),
                     ),
                   ],

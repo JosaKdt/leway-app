@@ -63,7 +63,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
     if (otp == '123456') {
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.pushReplacementNamed(context, '/dashboard');
       }
     } else {
       setState(() => _isLoading = false);
