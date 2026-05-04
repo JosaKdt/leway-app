@@ -4,6 +4,7 @@ import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/auth/otp_screen.dart';
+import 'screens/questionnaire/questionnaire_screen.dart';
 
 void main() {
   runApp(const LeWayApp());
@@ -30,6 +31,10 @@ class LeWayApp extends StatelessWidget {
         '/register': (context) => const RegisterScreen(),
         '/otp': (context) => const OtpScreen(),
         '/home': (context) => const DevNavigator(),
+        '/questionnaire': (context) => const QuestionnaireScreen(),
+        '/rapport': (context) => const Scaffold(
+            body: Center(child: Text('Rapport — bientôt')),
+    ),
       },
     );
   }
@@ -63,6 +68,8 @@ class DevNavigator extends StatelessWidget {
             _navButton(context, '🔐 Login', '/login'),
             _navButton(context, '📝 Register', '/register'),
             _navButton(context, '🔢 OTP', '/otp'),
+            _navButton(context, '📋 Questionnaire', '/questionnaire'),
+            _navButton(context, '📊 Rapport', '/rapport'),
           ],
         ),
       ),
