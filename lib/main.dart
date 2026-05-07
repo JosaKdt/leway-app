@@ -6,6 +6,8 @@ import 'screens/auth/register_screen.dart';
 import 'screens/auth/otp_screen.dart';
 import 'screens/questionnaire/questionnaire_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
+import 'screens/comparateur/comparateur_screen.dart';
+import 'screens/notifications/notifications_screen.dart';
 
 void main() {
   runApp(const LeWayApp());
@@ -43,6 +45,8 @@ class LeWayApp extends StatelessWidget {
               body: Center(child: Text('Profil — bientôt')),
             ),
         '/home': (context) => const DevNavigator(),
+        '/comparateur': (context) => const ComparateurScreen(),
+        '/notifications': (context) => const NotificationsScreen(),
       },
     );
   }
@@ -84,6 +88,8 @@ class DevNavigator extends StatelessWidget {
             _navButton(context, '🎓 Filières', '/filieres'),
             _navButton(context, '📊 Rapport', '/rapport'),
             _navButton(context, '👤 Profil', '/profil'),
+            _navButton(context, '⚖️ Comparateur', '/comparateur'),
+            _navButton(context, '🔔 Notifications', '/notifications'),
           ],
         ),
       ),

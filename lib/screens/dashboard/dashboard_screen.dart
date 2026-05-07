@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 import '../../constants/colors.dart';
 import '../../data/mock_data.dart';
+import '../filieres/filieres_screen.dart';
+import '../rapport/rapport_screen.dart';
+import '../profil/profil_screen.dart';
+import '../../services/auth_service.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  final int initialIndex;
+  const DashboardScreen({super.key, this.initialIndex = 0});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  int _currentIndex = 0;
+  late int _currentIndex;
 
   final List<Widget> _screens = const [
     _HomeTab(),
@@ -18,6 +23,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _RapportTab(),
     _ProfilTab(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,14 +95,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
 }
 
 // ==================== ONGLET ACCUEIL ====================
-class _HomeTab extends StatelessWidget {
+class _HomeTab extends StatefulWidget {
   const _HomeTab();
 
   @override
+  State<_HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<_HomeTab> {
+  Map<String, dynamic>? _userData;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final user = await AuthService.getCurrentUser();
+    setState(() {
+      _userData = user;
+      _loading = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final user = currentUser;
+    if (_loading) {
+      return const Scaffold(
+        backgroundColor: LeWayColors.background,
+        body: Center(
+          child: CircularProgressIndicator(color: LeWayColors.primary900),
+        ),
+      );
+    }
+
+    final prenom = _userData?['prenom'] ?? 'Bachelier';
+    final nom = _userData?['nom'] ?? '';
+    final avatar = '${prenom.isNotEmpty ? prenom[0] : 'B'}${nom.isNotEmpty ? nom[0] : ''}';
     final savedFilieres = filieres
-        .where((f) => user.filieresauvegardees.contains(f.id))
+        .where((f) => currentUser.filieresauvegardees.contains(f.idFiliere))
         .toList();
 
     return CustomScrollView(
@@ -114,7 +158,7 @@ class _HomeTab extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Bonjour, ${user.prenom} ! 👋',
+                      'Bonjour, $prenom ! 👋',
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
@@ -131,23 +175,61 @@ class _HomeTab extends StatelessWidget {
                     ),
                   ],
                 ),
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: Text(
-                      user.avatar,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () =>
+                          Navigator.pushNamed(context, '/notifications'),
+                      child: Stack(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.notifications_rounded,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                          ),
+                          Positioned(
+                            right: 8,
+                            top: 8,
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFF59E0B),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: Text(
+                          avatar,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -158,7 +240,6 @@ class _HomeTab extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              // Stats cards 2x2
               GridView.count(
                 crossAxisCount: 2,
                 shrinkWrap: true,
@@ -168,7 +249,7 @@ class _HomeTab extends StatelessWidget {
                 childAspectRatio: 1.5,
                 children: [
                   _statCard(
-                    '${user.progression}%',
+                    '${currentUser.progression}%',
                     'Progression',
                     'Questionnaire rempli',
                     Icons.compass_calibration_rounded,
@@ -176,7 +257,7 @@ class _HomeTab extends StatelessWidget {
                     LeWayColors.primary900,
                   ),
                   _statCard(
-                    '${user.filieresauvegardees.length}',
+                    '${currentUser.filieresauvegardees.length}',
                     'Filières sauvées',
                     'Dans vos favoris',
                     Icons.bookmark_rounded,
@@ -184,7 +265,7 @@ class _HomeTab extends StatelessWidget {
                     LeWayColors.amber600,
                   ),
                   _statCard(
-                    '${user.scoreGlobal}/100',
+                    '${currentUser.scoreGlobal}/100',
                     'Score global',
                     'Profil psychométrique',
                     Icons.trending_up_rounded,
@@ -227,7 +308,7 @@ class _HomeTab extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${user.progression}%',
+                          '${currentUser.progression}%',
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
@@ -240,7 +321,7 @@ class _HomeTab extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(6),
                       child: LinearProgressIndicator(
-                        value: user.progression / 100,
+                        value: currentUser.progression / 100,
                         backgroundColor: LeWayColors.slate100,
                         valueColor: const AlwaysStoppedAnimation<Color>(
                             LeWayColors.primary900),
@@ -252,14 +333,14 @@ class _HomeTab extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '${(user.progression * 0.3).round()} questions répondues',
+                          '${(currentUser.progression * 0.3).round()} questions répondues',
                           style: const TextStyle(
                             fontSize: 12,
                             color: LeWayColors.slate400,
                           ),
                         ),
                         Text(
-                          '${(30 - (user.progression * 0.3).round())} restantes',
+                          '${(30 - (currentUser.progression * 0.3).round())} restantes',
                           style: const TextStyle(
                             fontSize: 12,
                             color: LeWayColors.slate400,
@@ -272,8 +353,8 @@ class _HomeTab extends StatelessWidget {
                       width: double.infinity,
                       height: 44,
                       child: ElevatedButton(
-                        onPressed: () => Navigator.pushNamed(
-                            context, '/questionnaire'),
+                        onPressed: () =>
+                            Navigator.pushNamed(context, '/questionnaire'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: LeWayColors.primary900,
                           foregroundColor: Colors.white,
@@ -416,7 +497,8 @@ class _HomeTab extends StatelessWidget {
                       width: double.infinity,
                       height: 40,
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () =>
+                            Navigator.pushNamed(context, '/conseiller'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFF59E0B),
                           foregroundColor: Colors.white,
@@ -495,7 +577,14 @@ class _HomeTab extends StatelessWidget {
 
   Widget _filiereItem(BuildContext context, filiere) {
     return GestureDetector(
-      onTap: () {},
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => _FiliereDetailBottomSheet(filiere: filiere),
+        );
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
@@ -620,56 +709,311 @@ class _HomeTab extends StatelessWidget {
   }
 }
 
-// ==================== ONGLET FILIÈRES (placeholder) ====================
+// ==================== ONGLET FILIÈRES ====================
 class _FilieresTab extends StatelessWidget {
   const _FilieresTab();
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: LeWayColors.background,
-      body: Center(
-        child: Text(
-          'Filières — bientôt',
-          style: TextStyle(color: LeWayColors.slate500),
-        ),
-      ),
-    );
+    return const FilieresScreen();
   }
 }
 
-// ==================== ONGLET RAPPORT (placeholder) ====================
+// ==================== ONGLET RAPPORT ====================
 class _RapportTab extends StatelessWidget {
   const _RapportTab();
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: LeWayColors.background,
-      body: Center(
-        child: Text(
-          'Résultats — bientôt',
-          style: TextStyle(color: LeWayColors.slate500),
-        ),
-      ),
-    );
+    return const RapportScreen();
   }
 }
 
-// ==================== ONGLET PROFIL (placeholder) ====================
+// ==================== ONGLET PROFIL ====================
 class _ProfilTab extends StatelessWidget {
   const _ProfilTab();
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: LeWayColors.background,
-      body: Center(
-        child: Text(
-          'Profil — bientôt',
-          style: TextStyle(color: LeWayColors.slate500),
-        ),
+    return const ProfilScreen();
+  }
+}
+
+// ==================== DETAIL FILIÈRE BOTTOM SHEET ====================
+class _FiliereDetailBottomSheet extends StatelessWidget {
+  final dynamic filiere;
+  const _FiliereDetailBottomSheet({required this.filiere});
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.9,
+      maxChildSize: 0.95,
+      minChildSize: 0.5,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: LeWayColors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          child: ListView(
+            controller: scrollController,
+            padding: const EdgeInsets.all(20),
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: LeWayColors.slate200,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 6,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: LeWayColors.primary100,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(filiere.domaine,
+                        style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: LeWayColors.primary900)),
+                  ),
+                  ...filiere.tags.map<Widget>((tag) => Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: LeWayColors.slate100,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(tag,
+                            style: const TextStyle(
+                                fontSize: 11,
+                                color: LeWayColors.slate500)),
+                      )),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(filiere.nom,
+                  style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: LeWayColors.primary900)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.schedule_rounded,
+                      size: 14, color: LeWayColors.slate400),
+                  const SizedBox(width: 4),
+                  Text(filiere.duree,
+                      style: const TextStyle(
+                          fontSize: 12, color: LeWayColors.slate500)),
+                  const SizedBox(width: 12),
+                  const Icon(Icons.location_on_rounded,
+                      size: 14, color: LeWayColors.slate400),
+                  const SizedBox(width: 4),
+                  Text(filiere.ville,
+                      style: const TextStyle(
+                          fontSize: 12, color: LeWayColors.slate500)),
+                  const SizedBox(width: 12),
+                  const Icon(Icons.trending_up_rounded,
+                      size: 14, color: LeWayColors.green600),
+                  const SizedBox(width: 4),
+                  Text('${filiere.tauxInsertion}% insertion',
+                      style: const TextStyle(
+                          fontSize: 12,
+                          color: LeWayColors.green600,
+                          fontWeight: FontWeight.w500)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                      child: _bigStatCard(
+                          '${(filiere.salaireMedian / 1000).round()}k FCFA',
+                          'Salaire médian',
+                          LeWayColors.primary900)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                      child: _bigStatCard('${filiere.tauxInsertion}%',
+                          'Taux d\'insertion', LeWayColors.green600)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                      child: _bigStatCard('${filiere.scoreMarche2030}/100',
+                          'Score 2030', LeWayColors.amber600)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _sectionTitle('Description'),
+              const SizedBox(height: 8),
+              Text(filiere.description,
+                  style: const TextStyle(
+                      fontSize: 13,
+                      color: LeWayColors.slate600,
+                      height: 1.6)),
+              const SizedBox(height: 16),
+              _sectionTitle('Compétences requises'),
+              const SizedBox(height: 8),
+              ...filiere.competences.map<Widget>((comp) => Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: LeWayColors.slate100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.check_circle_rounded,
+                            size: 16, color: LeWayColors.green600),
+                        const SizedBox(width: 10),
+                        Expanded(
+                            child: Text(comp,
+                                style: const TextStyle(
+                                    fontSize: 13,
+                                    color: LeWayColors.slate700))),
+                      ],
+                    ),
+                  )),
+              const SizedBox(height: 16),
+              _sectionTitle('Universités disponibles'),
+              const SizedBox(height: 8),
+              ...filiere.universites.map<Widget>((u) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: LeWayColors.primary50,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.school_rounded,
+                              size: 16, color: LeWayColors.primary700),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                            child: Text(u,
+                                style: const TextStyle(
+                                    fontSize: 13,
+                                    color: LeWayColors.slate700))),
+                      ],
+                    ),
+                  )),
+              const SizedBox(height: 16),
+              _sectionTitle('Débouchés professionnels'),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: filiere.debouches
+                    .map<Widget>((d) => Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: LeWayColors.primary50,
+                            borderRadius: BorderRadius.circular(10),
+                            border:
+                                Border.all(color: LeWayColors.primary100),
+                          ),
+                          child: Text(d,
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  color: LeWayColors.primary900,
+                                  fontWeight: FontWeight.w500)),
+                        ))
+                    .toList(),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.share_rounded, size: 16),
+                      label: const Text('Partager'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: LeWayColors.slate600,
+                        side:
+                            const BorderSide(color: LeWayColors.slate200),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton.icon(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.bookmark_add_rounded,
+                          size: 16),
+                      label: const Text('Sauvegarder'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: LeWayColors.primary900,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _bigStatCard(String value, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: LeWayColors.slate100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Text(value,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: color)),
+          const SizedBox(height: 4),
+          Text(label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  fontSize: 10, color: LeWayColors.slate500)),
+        ],
       ),
     );
+  }
+
+  Widget _sectionTitle(String title) {
+    return Text(title,
+        style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: LeWayColors.primary900));
   }
 }

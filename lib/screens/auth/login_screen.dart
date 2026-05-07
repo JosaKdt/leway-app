@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../constants/colors.dart';
-
+import '../../services/api_service.dart';
+import '../../services/storage_service.dart';
+import '../../services/auth_service.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -26,11 +28,35 @@ class _LoginScreenState extends State<LoginScreen> {
   void _login() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
-      // TODO: appel API auth_service
-      await Future.delayed(const Duration(seconds: 2));
-      setState(() => _isLoading = false);
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/dashboard');
+      try {
+        final response = await apiService.login(
+          _emailController.text.trim(),
+          _passwordController.text,
+        );
+        // Sauvegarder le token
+        await StorageService.saveToken(response['access_token']);
+        await AuthService.refreshUser();
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/dashboard');
+        }
+      } catch (e) {
+        setState(() => _isLoading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                _isFrench
+                    ? 'Email ou mot de passe incorrect'
+                    : 'Wrong email or password',
+              ),
+              backgroundColor: LeWayColors.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+        }
       }
     }
   }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../constants/colors.dart';
+import '../../services/api_service.dart';
+import '../../services/storage_service.dart';
+import '../../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -12,6 +15,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final PageController _pageController = PageController();
   int _currentStep = 0;
   bool _isFrench = true;
+  bool _isLoading = false;
 
   // Contrôleurs étape 1
   final _nomController = TextEditingController();
@@ -28,6 +32,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // Étape 3 — Infos BAC
   String? _selectedSerie;
   String? _selectedMention;
+  String? _selectedEtablissement;
 
   final List<String> _series = ['S1', 'S2', 'S3', 'D', 'A', 'B', 'C', 'G'];
   final List<String> _mentions = [
@@ -51,7 +56,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _nextStep() {
+ void _nextStep() async {
     if (_currentStep == 0) {
       if (_formKey1.currentState!.validate()) {
         _pageController.nextPage(
@@ -67,8 +72,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
       }
     } else {
-      if (_selectedSerie != null && _selectedMention != null) {
-        Navigator.pushReplacementNamed(context, '/otp');
+      if (_selectedSerie != null && _selectedMention != null && _selectedEtablissement != null) {
+        setState(() => _isLoading = true);
+        try {
+          final response = await apiService.register({
+            'nom': _nomController.text.trim(),
+            'prenom': _prenomController.text.trim(),
+            'email': _emailController.text.trim(),
+            'telephone': _phoneController.text.trim(),
+            'mot_de_passe': _passwordController.text,
+            'serie_bac': _selectedSerie,
+            'notes_bac': null,
+          });
+          await StorageService.saveToken(response['access_token']);
+          await AuthService.refreshUser();
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, '/dashboard');
+          }
+        } catch (e) {
+          setState(() => _isLoading = false);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Erreur : $e'),
+                backgroundColor: LeWayColors.error,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            );
+          }
+        }
       }
     }
   }
@@ -436,14 +471,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       horizontal: 20, vertical: 12),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? LeWayColors.primary
+                        ? LeWayColors.primary900
                         : LeWayColors.primaryLight,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected
-                          ? LeWayColors.primary
-                          : Colors.transparent,
-                    ),
                   ),
                   child: Text(
                     serie,
@@ -459,7 +489,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               );
             }).toList(),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 20),
           _buildLabel(_isFrench ? 'Mention obtenue' : 'Grade obtained'),
           const SizedBox(height: 12),
           Column(
@@ -474,7 +504,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? LeWayColors.primary
+                        ? LeWayColors.primary900
                         : LeWayColors.primaryLight,
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -506,11 +536,59 @@ class _RegisterScreenState extends State<RegisterScreen> {
               );
             }).toList(),
           ),
+          const SizedBox(height: 20),
+          _buildLabel(_isFrench
+              ? 'Type d\'établissement'
+              : 'Type of institution'),
+          const SizedBox(height: 12),
+          ...['Public', 'Privé laïc', 'Privé confessionnel', 'Autre']
+              .map((type) {
+            final isSelected = _selectedEtablissement == type;
+            return GestureDetector(
+              onTap: () =>
+                  setState(() => _selectedEtablissement = type),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? LeWayColors.primary900
+                      : LeWayColors.primaryLight,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      isSelected
+                          ? Icons.check_circle_rounded
+                          : Icons.circle_outlined,
+                      color: isSelected
+                          ? Colors.white
+                          : LeWayColors.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      type,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: isSelected
+                            ? Colors.white
+                            : LeWayColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
         ],
       ),
     );
   }
-
   Widget _buildLabel(String text) {
     return Text(
       text,
@@ -569,4 +647,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
+}
+
+class _selectedEtablissement {
 }

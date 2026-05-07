@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../constants/colors.dart';
+import '../dashboard/dashboard_screen.dart';
 
 class QuestionnaireScreen extends StatefulWidget {
   const QuestionnaireScreen({super.key});
@@ -171,11 +172,11 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
   ];
 
   final List<Map<String, dynamic>> _choix = [
-    {'label_fr': 'Tout à fait d\'accord', 'label_en': 'Strongly agree', 'score': 5},
-    {'label_fr': 'D\'accord', 'label_en': 'Agree', 'score': 4},
+    {'label_fr': 'Tout à fait moi', 'label_en': 'Totally me', 'score': 5},
+    {'label_fr': 'Plutôt moi', 'label_en': 'Rather me', 'score': 4},
     {'label_fr': 'Neutre', 'label_en': 'Neutral', 'score': 3},
-    {'label_fr': 'Pas d\'accord', 'label_en': 'Disagree', 'score': 2},
-    {'label_fr': 'Pas du tout d\'accord', 'label_en': 'Strongly disagree', 'score': 1},
+    {'label_fr': 'Plutôt pas moi', 'label_en': 'Rather not me', 'score': 2},
+    {'label_fr': 'Pas du tout moi', 'label_en': 'Not me at all', 'score': 1},
   ];
 
   @override
@@ -212,7 +213,12 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
       _animController.forward();
     } else {
       // Toutes les questions répondues → aller au rapport
-      Navigator.pushReplacementNamed(context, '/rapport');
+     Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(
+    builder: (context) => const DashboardScreen(initialIndex: 2),
+  ),
+);
     }
   }
 
@@ -273,16 +279,20 @@ class _QuestionnaireScreenState extends State<QuestionnaireScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      GestureDetector(
-                        onTap: _prevQuestion,
-                        child: Icon(
-                          Icons.arrow_back_ios_rounded,
-                          color: _currentIndex > 0
-                              ? Colors.white
-                              : Colors.white.withOpacity(0.3),
-                          size: 20,
-                        ),
-                      ),
+                     GestureDetector(
+  onTap: () {
+    if (_currentIndex > 0) {
+      _prevQuestion();
+    } else {
+      Navigator.pop(context);
+    }
+  },
+  child: const Icon(
+    Icons.arrow_back_ios_rounded,
+    color: Colors.white,
+    size: 20,
+  ),
+),
                       Text(
                         _isFrench
                             ? 'Question ${_currentIndex + 1} sur ${_questions.length}'
